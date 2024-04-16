@@ -16,7 +16,9 @@ git_executable = os.path.join(current_dir, 'PortableGit', 'bin', 'git.exe')
 # Example of using git with a direct path
 subprocess.run([git_executable, "status"], check=True)
 
-os.environ['HOME'] = os.path.expanduser('~')
+tmp_dir = os.path.join(current_dir, 'tmp')
+os.makedirs(tmp_dir, exist_ok=True)
+os.environ['TMP'] = tmp_dir
 
 
 def push_changes_to_github(commit_message="Update content"):
@@ -25,9 +27,11 @@ def push_changes_to_github(commit_message="Update content"):
         os.environ['HOME'] = os.path.expanduser('~')
         
         # Set the GIT_SSH_COMMAND to use the custom deploy key and PortableGit ssh
-        portable_ssh_path = os.path.join(current_dir, 'PortableGit', 'usr', 'bin', 'ssh.exe')
-        os.environ['GIT_SSH_COMMAND'] = f"{portable_ssh_path} -i current_dir"
+        ssh_executable = os.path.join(current_dir, 'PortableGit', 'usr', 'bin', 'ssh.exe')
+        ssh_key_path = os.path.join(current_dir, 'new_deploy_key')
+        os.environ['GIT_SSH_COMMAND'] = f'"{ssh_executable}" -i "{ssh_key_path}" -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
         
+                
         # Set repository path
         repository_path = os.path.join(current_dir)
         os.chdir(repository_path)
@@ -186,7 +190,7 @@ def extract_text_from_pdf(pdf_path):
         return text.strip()
     except Exception as e:
         print(f"An error occurred while processing {pdf_path}: {e}")
-        return None
+        return ''
 
 
 def find_html_files(directory):
