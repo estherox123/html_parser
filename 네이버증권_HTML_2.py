@@ -16,19 +16,29 @@ git_executable = os.path.join(current_dir, 'PortableGit', 'bin', 'git.exe')
 # Example of using git with a direct path
 subprocess.run([git_executable, "status"], check=True)
 
+os.environ['HOME'] = os.path.expanduser('~')
+
 
 def push_changes_to_github(commit_message="Update content"):
     try:
-        # Navigate to the repository directory
-        os.chdir(current_dir)
-
+        # Define HOME environment variable for SSH
+        os.environ['HOME'] = os.path.expanduser('~')
+        
+        # Set the GIT_SSH_COMMAND to use the custom deploy key and PortableGit ssh
+        portable_ssh_path = os.path.join(current_dir, 'PortableGit', 'usr', 'bin', 'ssh.exe')
+        os.environ['GIT_SSH_COMMAND'] = f"{portable_ssh_path} -i current_dir"
+        
+        # Set repository path
+        repository_path = os.path.join(current_dir)
+        os.chdir(repository_path)
+        
         # Stash any unstaged changes
         subprocess.run([git_executable, "stash", "--include-untracked"], check=True)
         print("Stashed any unstaged changes.")
 
         # Pull the latest changes from the remote repository with rebase to reduce merge conflicts
-        subprocess.run([git_executable, "pull", "--rebase", "origin", "gh-pages"], check=True)
-        print("Pulled latest changes from gh-pages.")
+        subprocess.run([git_executable, "pull", "--rebase", "origin", "main"], check=True)
+        print("Pulled latest changes from main.")
 
         # Reapply stashed changes if any
         subprocess.run([git_executable, "stash", "pop"], check=False)  # This may raise an error if there are conflicts
@@ -49,7 +59,7 @@ def push_changes_to_github(commit_message="Update content"):
             print(f"Committed changes with message: '{commit_message}'")
 
             # Push the changes
-            subprocess.run([git_executable, "push", "origin", "gh-pages"], check=True)
+            subprocess.run([git_executable, "push", "origin", "main"], check=True)
             print("Changes pushed to GitHub successfully.")
         else:
             print("No changes to commit.")
@@ -289,7 +299,7 @@ print(f"모든 파일이 {keyword} 폴더에 다운로드 되었습니다.")
 
 
 # Call the function with the appropriate folder name
-update_navigation_page(html_files, repository_path, keyword)
+update_navigation_page(html_files, current_dir, keyword)
 
 # Commit and push changes to GitHub
 push_changes_to_github("Add new analysis reports and updated index")
