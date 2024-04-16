@@ -263,7 +263,7 @@ for row in rows:
                 
                 
                 # Create a directory for HTML files
-                html_folder_base_path = os.path.join(current_dir, keyword)
+                html_folder_base_path = os.path.join(current_dir, f"{keyword}_HTML")
 
                 # Ensure the HTML directory exists
                 if not os.path.exists(html_folder_base_path):
