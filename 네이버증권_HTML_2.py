@@ -13,6 +13,18 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 # Construct the full path to git.exe
 git_executable = os.path.join(current_dir, 'PortableGit', 'bin', 'git.exe')
 
+# Python code to create a config.txt with SSH configuration for GitHub
+config_content = f"""Host github.com
+    User git
+    IdentityFile {current_dir}\\new_deploy_key
+    IdentitiesOnly yes
+"""
+
+# Write the content to config.txt
+with open('config.txt', 'w') as config_file:
+    config_file.write(config_content)
+
+
 # Example of using git with a direct path
 subprocess.run([git_executable, "status"], check=True)
 

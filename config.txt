@@ -1,4 +1,4 @@
 Host github.com
     User git
-    IdentityFile C:\Desktop\html_parser\new_deploy_key
+    IdentityFile C:\Users\PC05\Desktop\html_parser\new_deploy_key
     IdentitiesOnly yes
