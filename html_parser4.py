@@ -115,12 +115,15 @@ def get_existing_html_files_from_github(repo_url):
 def update_navigation_page(repo_url, output_folder):
     existing_html_files = get_existing_html_files_from_github(repo_url)
     index_file_path = os.path.join(output_folder, 'index.html')
+
     with open(index_file_path, 'w', encoding='utf-8') as f:
         f.write("<!DOCTYPE html>\n<html lang='en'>\n<head>\n    <meta charset='UTF-8'>\n")
         f.write("    <meta name='viewport' content='width=device-width, initial-scale=1.0'>\n")
         f.write("    <title>Analysis Reports</title>\n</head>\n<body>\n    <h1>Analysis Reports</h1>\n")
         f.write("    <ul>\n")
         for html_file in existing_html_files:
+            # Assume that the folder name is part of the html_file name before "_"
+            folder_name = html_file.split('_')[0] + '_HTML'  # You need to adjust this according to your naming convention
             f.write(f"        <li><a href='{folder_name}/{html_file}'>{html_file}</a></li>\n")
         f.write("    </ul>\n</body>\n</html>")
 
