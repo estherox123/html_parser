@@ -223,7 +223,8 @@ def code():
     url = create_search_url(keyword)
 
     # Create a new directory with the keyword
-    folder_path = create_unique_dir(os.getcwd(), keyword)
+    current_dir = os.getcwd()
+    folder_path = create_unique_dir(current_dir, keyword)
 
     # Perform a GET request to fetch the raw HTML content
     response = requests.get(url)
@@ -320,7 +321,7 @@ def code():
 
     
     repo_url = "estherox123/html_parser"
-    output_folder = html_folder_base_path # This should be the path where your index.html is located
+    output_folder = current_dir # This should be the path where your index.html is located
 
     # Call the function with the appropriate folder name
     update_navigation_page(repo_url, output_folder)
