@@ -325,6 +325,12 @@ def code():
     # Commit and push changes to GitHub
     push_changes_to_github("Add new analysis reports and updated index")
 
+    # Call the function with the appropriate folder name
+    update_navigation_page(repo_url, output_folder)
+
+    # Commit and push changes to GitHub
+    push_changes_to_github("Add new analysis reports and updated index")
+
     pass
 
 if __name__ == "__main__":
