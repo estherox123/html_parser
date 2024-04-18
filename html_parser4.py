@@ -94,67 +94,35 @@ def push_changes_to_github(commit_message="Update content"):
 
 def get_all_html_folders(repo_url):
     api_url = f"https://api.github.com/repos/{repo_url}/contents/"
-    headers = {"Accept": "application/vnd.github.v3+json"}
-    response = requests.get(api_url, headers=headers)
+    response = requests.get(api_url)
     response.raise_for_status()
-    directories_data = response.json()
-
-    html_folders = [item['path'] for item in directories_data if item['type'] == 'dir' and item['name'].endswith('_html')]
+    content_list = response.json()
+    html_folders = [content['name'] for content in content_list if content['type'] == 'dir' and content['name'].endswith('_HTML')]
     return html_folders
 
 
 def get_existing_html_files_from_github(repo_url):
     html_folders = get_all_html_folders(repo_url)
     html_files = []
-
-    for folder in html_folders:
-        api_url = f"https://api.github.com/repos/{repo_url}/contents/{folder}"
-        response = requests.get(api_url)
+    for folder_name in html_folders:
+        folder_contents_url = f"https://api.github.com/repos/{repo_url}/contents/{folder_name}"
+        response = requests.get(folder_contents_url)
         response.raise_for_status()
-        files_data = response.json()
-        html_files += [file['name'] for file in files_data if file['name'].endswith('.html')]
-
+        folder_contents = response.json()
+        html_files.extend([content['name'] for content in folder_contents if content['name'].endswith('.html')])
     return html_files
 
-
 def update_navigation_page(repo_url, output_folder):
-    index_file_path = os.path.join(output_folder, 'index.html')
     existing_html_files = get_existing_html_files_from_github(repo_url)
-
-    # Read the current index.html content and look for existing links
-    if os.path.isfile(index_file_path):
-        with open(index_file_path, 'r', encoding='utf-8') as file:
-            index_content = file.read()
-    else:
-        index_content = ""
-
-    # Create a BeautifulSoup object to parse the current index.html
-    soup = BeautifulSoup(index_content, 'html.parser')
-    
-    # Find all links in the current index.html
-    links = soup.find_all('a', href=True)
-
-    # Rebuild the index.html content with links that only exist in the repository
-    new_index_content = "<!DOCTYPE html>\n<html lang='en'>\n<head>\n"
-    new_index_content += "    <meta charset='UTF-8'>\n"
-    new_index_content += "    <meta name='viewport' content='width=device-width, initial-scale=1.0'>\n"
-    new_index_content += "    <title>Analysis Reports</title>\n"
-    new_index_content += "</head>\n<body>\n"
-    new_index_content += "    <h1>Analysis Reports</h1>\n"
-    new_index_content += "    <ul>\n"
-
-    # Add links to existing HTML files that are also in the repository
-    for link in links:
-        link_file_name = os.path.basename(link['href'])
-        if link_file_name in existing_html_files:
-            # File exists in the repository, so keep the link
-            new_index_content += str(link)
-
-    new_index_content += "    </ul>\n</body>\n</html>"
-
-    # Write the updated index.html file
-    with open(index_file_path, 'w', encoding='utf-8') as file:
-        file.write(new_index_content)
+    index_file_path = os.path.join(output_folder, 'index.html')
+    with open(index_file_path, 'w', encoding='utf-8') as f:
+        f.write("<!DOCTYPE html>\n<html lang='en'>\n<head>\n    <meta charset='UTF-8'>\n")
+        f.write("    <meta name='viewport' content='width=device-width, initial-scale=1.0'>\n")
+        f.write("    <title>Analysis Reports</title>\n</head>\n<body>\n    <h1>Analysis Reports</h1>\n")
+        f.write("    <ul>\n")
+        for html_file in existing_html_files:
+            f.write(f"        <li><a href='{folder_name}/{html_file}'>{html_file}</a></li>\n")
+        f.write("    </ul>\n</body>\n</html>")
 
 
 
