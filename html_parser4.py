@@ -223,8 +223,14 @@ def code():
     url = create_search_url(keyword)
 
     # Create a new directory with the keyword
-    current_dir = os.getcwd()
-    folder_path = create_unique_dir(current_dir, keyword)
+    folder_path = create_unique_dir(os.getcwd(), keyword)
+
+    html_folder_base_path = os.path.join(application_path, f"{keyword}_HTML")
+    if not os.path.exists(html_folder_base_path):
+        os.makedirs(html_folder_base_path)
+    
+    # If your index.html should be in the base folder of your repo, use application_path
+    output_folder = application_path  # This should be the path where your index.html is located
 
     # Perform a GET request to fetch the raw HTML content
     response = requests.get(url)
@@ -321,13 +327,7 @@ def code():
 
     
     repo_url = "estherox123/html_parser"
-    output_folder = current_dir # This should be the path where your index.html is located
-
-    # Call the function with the appropriate folder name
-    update_navigation_page(repo_url, output_folder)
-
-    # Commit and push changes to GitHub
-    push_changes_to_github("Add new analysis reports and updated index")
+    output_folder = html_folder_base_path # This should be the path where your index.html is located
 
     # Call the function with the appropriate folder name
     update_navigation_page(repo_url, output_folder)
