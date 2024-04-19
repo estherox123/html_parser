@@ -121,15 +121,13 @@ def update_navigation_page(repo_url, output_folder):
         f.write("    <meta name='viewport' content='width=device-width, initial-scale=1.0'>\n")
         f.write("    <title>Analysis Reports</title>\n</head>\n<body>\n    <h1>Analysis Reports</h1>\n")
         f.write("    <ul>\n")
+        
         for html_file in existing_html_files:
-            # Assume that the folder name is part of the html_file name before "_"
-            folder_name, file_name = os.path.split(html_file)  # Splits the path into the folder and the file name
-            link_path = os.path.join(folder_name, file_name)  # Joins them to make a relative path
-            f.write(f"        <li><a href='{folder_name}/{link_path}'>{file_name}</a></li>\n")
-
+            # Extract the keyword from the file name (assuming it's the first part of the file name before '_')
+            keyword = html_file.split('_')[0]
+            folder_name = f"{keyword}_HTML"
+            f.write(f"        <li><a href='./{folder_name}/{html_file}'>{html_file}</a></li>\n")
         f.write("    </ul>\n</body>\n</html>")
-
-
 
 def save_text_as_markdown(stock_name, title, date, content, output_folder):
     # Sanitize the filename
