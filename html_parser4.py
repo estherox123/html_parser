@@ -123,8 +123,10 @@ def update_navigation_page(repo_url, output_folder):
         f.write("    <ul>\n")
         for html_file in existing_html_files:
             # Assume that the folder name is part of the html_file name before "_"
-            folder_name = html_file.split('_')[0] + '_HTML'  # You need to adjust this according to your naming convention
-            f.write(f"        <li><a href='{folder_name}/{html_file}'>{html_file}</a></li>\n")
+            folder_name, file_name = os.path.split(html_file)  # Splits the path into the folder and the file name
+            link_path = os.path.join(folder_name, file_name)  # Joins them to make a relative path
+            f.write(f"        <li><a href='{link_path}'>{file_name}</a></li>\n")
+
         f.write("    </ul>\n</body>\n</html>")
 
 
