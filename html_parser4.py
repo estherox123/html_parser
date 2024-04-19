@@ -101,33 +101,35 @@ def get_all_html_folders(repo_url):
     return html_folders
 
 
-def get_existing_html_files_from_github(repo_url):
+def update_navigation_page(repo_url, output_folder):
+    # Fetch all HTML folders
     html_folders = get_all_html_folders(repo_url)
-    html_files = []
+    # Initialize a dictionary to map filenames to their paths
+    file_path_dict = {}
+
+    # Iterate over each folder and fetch HTML files within them
     for folder_name in html_folders:
         folder_contents_url = f"https://api.github.com/repos/{repo_url}/contents/{folder_name}"
         response = requests.get(folder_contents_url)
         response.raise_for_status()
         folder_contents = response.json()
-        html_files.extend([content['name'] for content in folder_contents if content['name'].endswith('.html')])
-    return html_files
+        # For each HTML file, add its path to the dictionary
+        for content in folder_contents:
+            if content['name'].endswith('.html'):
+                # The path will be the folder name plus the file name
+                file_path_dict[content['name']] = f"{folder_name}/{content['name']}"
 
-def update_navigation_page(repo_url, output_folder):
-    existing_html_files = get_existing_html_files_from_github(repo_url)
-    index_file_path = os.path.join(output_folder, 'index.html')
+    # Now write the index file with the correct paths
+    with open(os.path.join(output_folder, 'index.html'), 'w', encoding='utf-8') as index_file:
+        index_file.write("<!DOCTYPE html>\n<html lang='en'>\n<head>\n    <meta charset='UTF-8'>\n")
+        index_file.write("    <meta name='viewport' content='width=device-width, initial-scale=1.0'>\n")
+        index_file.write("    <title>Analysis Reports</title>\n</head>\n<body>\n    <h1>Analysis Reports</h1>\n")
+        index_file.write("    <ul>\n")
+        for file_name, file_path in file_path_dict.items():
+            # Write the list item with a relative path to the HTML file
+            index_file.write(f"        <li><a href='./{file_path}'>{file_name}</a></li>\n")
+        index_file.write("    </ul>\n</body>\n</html>")
 
-    with open(index_file_path, 'w', encoding='utf-8') as f:
-        f.write("<!DOCTYPE html>\n<html lang='en'>\n<head>\n    <meta charset='UTF-8'>\n")
-        f.write("    <meta name='viewport' content='width=device-width, initial-scale=1.0'>\n")
-        f.write("    <title>Analysis Reports</title>\n</head>\n<body>\n    <h1>Analysis Reports</h1>\n")
-        f.write("    <ul>\n")
-        
-        for html_file in existing_html_files:
-            # Extract the keyword from the file name (assuming it's the first part of the file name before '_')
-            keyword = html_file.split('_')[0]
-            folder_name = f"{keyword}_HTML"
-            f.write(f"        <li><a href='./{folder_name}/{html_file}'>{html_file}</a></li>\n")
-        f.write("    </ul>\n</body>\n</html>")
 
 def save_text_as_markdown(stock_name, title, date, content, output_folder):
     # Sanitize the filename
