@@ -125,7 +125,7 @@ def update_navigation_page(repo_url, output_folder):
             # Assume that the folder name is part of the html_file name before "_"
             folder_name, file_name = os.path.split(html_file)  # Splits the path into the folder and the file name
             link_path = os.path.join(folder_name, file_name)  # Joins them to make a relative path
-            f.write(f"        <li><a href='{link_path}'>{file_name}</a></li>\n")
+            f.write(f"        <li><a href='{folder_name}/{link_path}'>{file_name}</a></li>\n")
 
         f.write("    </ul>\n</body>\n</html>")
 
