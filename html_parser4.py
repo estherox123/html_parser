@@ -30,17 +30,16 @@ with open('config.txt', 'w') as config_file:
     config_file.write(config_content)
 
 
-# Example of using git with a direct path
-subprocess.run([git_executable, "status"], check=True)
+# Use application_path to construct paths relative to the executable's location
+git_executable = os.path.join(application_path, 'PortableGit', 'bin', 'git.exe')
+
+subprocess.run([git_executable, "add", "."], check=True)
+
 
 tmp_dir = os.path.join(application_path, 'tmp')
 os.makedirs(tmp_dir, exist_ok=True)
 os.environ['TMP'] = tmp_dir
 
-# Use application_path to construct paths relative to the executable's location
-git_executable = os.path.join(application_path, 'PortableGit', 'bin', 'git.exe')
-
-subprocess.run([git_executable, "add", "."], check=True)
 
 # Commit the changes
 if status_output.strip():
