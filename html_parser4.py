@@ -29,11 +29,11 @@ def push_changes_to_github(application_path, git_executable, commit_message="Upd
         print("Stashed any unstaged changes.")
 
         # Pull the latest changes from the remote repository with rebase to reduce merge conflicts
-        subprocess.run([git_executable, "pull", "--rebase", "origin", "main"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+        subprocess.run([git_executable, "pull", "--rebase", "origin", "main"], check=True)
         print("Pulled latest changes from main.")
 
         # Reapply stashed changes if any
-        subprocess.run([git_executable, "stash", "pop"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)  # This may raise an error if there are conflicts
+        subprocess.run([git_executable, "stash", "pop"], check=False)  # This may raise an error if there are conflicts
         
         # Check for conflicts after unstashing
         status_output = subprocess.run([git_executable, "status", "--porcelain"], text=True, stdout=subprocess.PIPE).stdout
@@ -42,16 +42,16 @@ def push_changes_to_github(application_path, git_executable, commit_message="Upd
             return  # Exit the function, as manual intervention is required
 
         # Add all changes including new files
-        subprocess.run([git_executable, "add", "."], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+        subprocess.run([git_executable, "add", "."], check=True)
         print("Added all changes.")
 
         # Commit the changes
         if status_output.strip():
-            subprocess.run([git_executable, "commit", "-m", commit_message], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+            subprocess.run([git_executable, "commit", "-m", commit_message], check=True)
             print(f"Committed changes with message: '{commit_message}'")
 
             # Push the changes
-            subprocess.run([git_executable, "push", "origin", "main"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+            subprocess.run([git_executable, "push", "origin", "main"], check=True)
             print("Changes pushed to GitHub successfully.")
         else:
             print("No changes to commit.")
