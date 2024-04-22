@@ -8,47 +8,41 @@ import re
 import subprocess
 import sys
 
+def initial_git_setup(git_executable, application_path):
+    try:
+        # Navigate to the repository directory
+        os.chdir(application_path)
 
-# Determine if the application is a frozen executable (i.e., compiled with PyInstaller)
-if getattr(sys, 'frozen', False):
-    # The application is running as a standalone executable
-    application_path = os.path.dirname(sys.executable)
-else:
-    # The application is running as a normal Python script
-    application_path = os.path.dirname(os.path.abspath(__file__))
+        # Add all changes including new files
+        subprocess.run([git_executable, "add", "."], check=True)
 
+        # Stash any unstaged changes to ensure the directory is clean
+        subprocess.run([git_executable, "stash", "--include-untracked"], check=True)
+        print("Stashed any unstaged changes.")
 
-# Python code to create a config.txt with SSH configuration for GitHub
-config_content = f"""Host github.com
-    User git
-    IdentityFile {application_path}\\new_deploy_key
-    IdentitiesOnly yes
-"""
+        # Pull the latest changes from the remote repository to reduce conflicts
+        subprocess.run([git_executable, "pull", "--rebase", "origin", "main"], check=True)
+        print("Pulled latest changes from main.")
 
-# Write the content to config.txt
-with open('config.txt', 'w') as config_file:
-    config_file.write(config_content)
+        # Reapply stashed changes if any
+        subprocess.run([git_executable, "stash", "pop"], check=False)  # This may raise an error if there are conflicts
 
+        # Commit the changes
+        status_output = subprocess.run([git_executable, "status", "--porcelain"], text=True, stdout=subprocess.PIPE).stdout
+        if status_output.strip():
+            commit_message = "Pre-run commit"
+            subprocess.run([git_executable, "commit", "-m", commit_message], check=True)
+            print(f"Committed changes with message: '{commit_message}'")
 
-# Use application_path to construct paths relative to the executable's location
-git_executable = os.path.join(application_path, 'PortableGit', 'bin', 'git.exe')
+            # Push the changes
+            subprocess.run([git_executable, "push", "origin", "main"], check=True)
+            print("Changes pushed to GitHub successfully.")
+        else:
+            print("No changes to commit.")
 
-subprocess.run([git_executable, "add", "."], check=True)
-
-
-tmp_dir = os.path.join(application_path, 'tmp')
-os.makedirs(tmp_dir, exist_ok=True)
-os.environ['TMP'] = tmp_dir
-
-
-# Commit the changes
-if status_output.strip():
-    subprocess.run([git_executable, "commit", "-m", commit_message], check=True)
-
-    # Push the changes
-    subprocess.run([git_executable, "push", "origin", "main"], check=True)
-
-
+    except subprocess.CalledProcessError as e:
+        print(f"An error occurred during initial Git setup: {e}")
+        
 def push_changes_to_github(commit_message="Update content"):
     try:
         # Define HOME environment variable for SSH
@@ -226,6 +220,35 @@ def find_html_files(directory):
     return html_files
 
 def code():
+        # Determine if the application is a frozen executable (i.e., compiled with PyInstaller)
+    if getattr(sys, 'frozen', False):
+        # The application is running as a standalone executable
+        application_path = os.path.dirname(sys.executable)
+    else:
+        # The application is running as a normal Python script
+        application_path = os.path.dirname(os.path.abspath(__file__))
+
+    # Use application_path to construct paths relative to the executable's location
+    git_executable = os.path.join(application_path, 'PortableGit', 'bin', 'git.exe')
+
+    # Define a temporary directory for operations
+    tmp_dir = os.path.join(application_path, 'tmp')
+    os.makedirs(tmp_dir, exist_ok=True)
+    os.environ['TMP'] = tmp_dir
+
+    # Set up the SSH configuration for Git
+    config_content = f"""Host github.com
+    User git
+    IdentityFile {application_path}\\new_deploy_key
+    IdentitiesOnly yes
+    """
+    # Write the content to config.txt
+    with open('config.txt', 'w') as config_file:
+        config_file.write(config_content)
+
+    # Initial Git setup: add, commit, and push any pre-existing changes
+    initial_git_setup(git_executable, application_path)
+
     # Input the Korean text
     keyword = input("검색어를 입력해주세요: ")
 
