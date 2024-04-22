@@ -8,11 +8,10 @@ import re
 import subprocess
 import sys
 
-def check_file_tracked(git_executable, path, file_name):
-    cmd = [git_executable, "ls-files", file_name]
-    result = subprocess.run(cmd, stdout=subprocess.PIPE, cwd=path)
-    return result.stdout.strip() != b""
-
+def append_to_gitignore(application_path, filename):
+    gitignore_path = os.path.join(application_path, '.gitignore')
+    with open(gitignore_path, 'a') as file:
+        file.write(f"\n{filename}\n")
 
 def push_changes_to_github(application_path, git_executable, commit_message="Update content"):
     try:
@@ -202,13 +201,13 @@ def code():
     # Use application_path to construct paths relative to the executable's location
     git_executable = os.path.join(application_path, 'PortableGit', 'bin', 'git.exe')
 
-    check_file_tracked(git_executable, application_path, "html_parser4.exe")
-
     # Define a temporary directory for operations
     tmp_dir = os.path.join(application_path, 'tmp')
     os.makedirs(tmp_dir, exist_ok=True)
     os.environ['TMP'] = tmp_dir
 
+    append_to_gitignore(application_path, 'html_parser4.exe')
+    
     # Set up the SSH configuration for Git
     config_content = f"""Host github.com
     User git
