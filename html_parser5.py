@@ -73,38 +73,30 @@ def get_all_html_folders(repo_url):
     return html_folders
 
 
-def update_navigation_page(output_folder, base_folder_name='downloaded_files'):
-    # Define the base path for the downloaded files
-    downloaded_files_path = os.path.join(output_folder, base_folder_name)
-    html_output_path = os.path.join(downloaded_files_path, 'html')
-
-    # Ensure the HTML output path exists
-    if not os.path.exists(html_output_path):
-        print(f"The directory {html_output_path} does not exist.")
-        return
-
+def update_navigation_page(repo_url, output_folder):
+    # Fetch all HTML folders
+    html_folders = get_all_html_folders(repo_url)
     # Initialize a dictionary to map filenames to their paths
     file_path_dict = {}
 
-    # Iterate over each HTML subfolder and collect HTML file paths
-    for folder_name in os.listdir(html_output_path):
+    # Iterate over each folder and fetch HTML files within them
+    for folder_name in html_folders:
         folder_path = os.path.join(html_output_path, folder_name)
-        if os.path.isdir(folder_path):
-            for file_name in os.listdir(folder_path):
-                if file_name.endswith('.html'):
-                    file_path_dict[file_name] = os.path.join(base_folder_name, 'html', folder_name, file_name)
+        for file_name in os.listdir(folder_path):
+            if file_name.endswith('.html'):
+                # The path will be the HTML output folder plus the folder name plus the file name
+                file_path_dict[file_name] = os.path.join('downloaded_files', 'html', folder_name, file_name)
 
-    # Write the index.html file with the correct paths
+    # Now write the index file with the correct paths
     with open(os.path.join(output_folder, 'index.html'), 'w', encoding='utf-8') as index_file:
         index_file.write("<!DOCTYPE html>\n<html lang='en'>\n<head>\n    <meta charset='UTF-8'>\n")
         index_file.write("    <meta name='viewport' content='width=device-width, initial-scale=1.0'>\n")
         index_file.write("    <title>Analysis Reports</title>\n</head>\n<body>\n    <h1>Analysis Reports</h1>\n")
         index_file.write("    <ul>\n")
-        for file_name, file_path in sorted(file_path_dict.items()):
-            index_file.write(f"        <li><a href='./{file_path}' target='_blank'>{file_name}</a></li>\n")
+        for file_name, file_path in file_path_dict.items():
+            # Write the list item with a relative path to the HTML file
+            index_file.write(f"        <li><a href='./{file_path}'>{file_name}</a></li>\n")
         index_file.write("    </ul>\n</body>\n</html>")
-    print("Updated navigation page.")
-
 
 
 def save_text_as_markdown(stock_name, title, date, content, output_folder):
@@ -329,7 +321,7 @@ def code():
     print(f"모든 파일이 {keyword} 폴더에 다운로드 되었습니다.")
 
     
-    repo_url = "estherox123/html_parser"
+    repo_url = "estherox123/html_parser/downloaded_files"
     output_folder = application_path # This should be the path where your index.html is located
 
     # Commit and push changes to GitHub
