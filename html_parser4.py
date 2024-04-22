@@ -9,7 +9,7 @@ import subprocess
 import sys
 
 
-def push_changes_to_github(commit_message="Update content"):
+def push_changes_to_github(application_path, git_executable, commit_message="Update content"):
     try:
         # Define HOME environment variable for SSH
         os.environ['HOME'] = os.path.expanduser('~')
