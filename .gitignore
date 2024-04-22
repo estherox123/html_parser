@@ -38,3 +38,6 @@ html_parser4.exe
 
 # Ignore all .exe files
 *.exe
+
+# Ignore all .exe files
+*.exe
