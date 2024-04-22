@@ -65,7 +65,7 @@ def push_changes_to_github(application_path, git_executable, commit_message="Upd
 
 
 def get_all_html_folders(repo_url):
-    api_url = f"https://api.github.com/repos/{repo_url}/contents/"
+    api_url = f"https://api.github.com/repos/{repo_url}/contents/downloaded_files/"
     response = requests.get(api_url)
     response.raise_for_status()
     content_list = response.json()
@@ -81,7 +81,7 @@ def update_navigation_page(repo_url, output_folder):
 
     # Iterate over each folder and fetch HTML files within them
     for folder_name in html_folders:
-        folder_contents_url = f"https://api.github.com/repos/{repo_url}/contents/{folder_name}"
+        folder_contents_url = f"https://api.github.com/repos/{repo_url}/contents/downloaded_files/{folder_name}"
         response = requests.get(folder_contents_url)
         response.raise_for_status()
         folder_contents = response.json()
