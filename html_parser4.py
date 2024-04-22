@@ -207,8 +207,6 @@ def code():
     tmp_dir = os.path.join(application_path, 'tmp')
     os.makedirs(tmp_dir, exist_ok=True)
     os.environ['TMP'] = tmp_dir
-
-    append_to_gitignore(application_path, 'html_parser4.exe')
     
     # Set up the SSH configuration for Git
     config_content = f"""Host github.com
