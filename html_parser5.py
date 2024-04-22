@@ -81,15 +81,11 @@ def update_navigation_page(repo_url, output_folder):
 
     # Iterate over each folder and fetch HTML files within them
     for folder_name in html_folders:
-        folder_contents_url = f"https://api.github.com/repos/{repo_url}/contents/downloaded_files/{folder_name}"
-        response = requests.get(folder_contents_url)
-        response.raise_for_status()
-        folder_contents = response.json()
-        # For each HTML file, add its path to the dictionary
-        for content in folder_contents:
-            if content['name'].endswith('.html'):
-                # The path will be the folder name plus the file name
-                file_path_dict[content['name']] = f"{folder_name}/{content['name']}"
+        folder_path = os.path.join(html_output_path, folder_name)
+        for file_name in os.listdir(folder_path):
+            if file_name.endswith('.html'):
+                # The path will be the HTML output folder plus the folder name plus the file name
+                file_path_dict[file_name] = os.path.join('downloaded_files', 'html', folder_name, file_name)
 
     # Now write the index file with the correct paths
     with open(os.path.join(output_folder, 'index.html'), 'w', encoding='utf-8') as index_file:
