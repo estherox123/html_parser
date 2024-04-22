@@ -321,7 +321,7 @@ def code():
     print(f"모든 파일이 {keyword} 폴더에 다운로드 되었습니다.")
 
     
-    repo_url = "estherox123/html_parser"
+    repo_url = "estherox123/html_parser/downloaded_files"
     output_folder = application_path # This should be the path where your index.html is located
 
     # Commit and push changes to GitHub
