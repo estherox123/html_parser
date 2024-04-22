@@ -213,7 +213,7 @@ def code():
         config_file.write(config_content)
 
     # Initial Git setup: add, commit, and push any pre-existing changes
-    push_changes_to_github(commit_message="Initial setup")
+    push_changes_to_github(application_path, git_executable, commit_message="Initial setup")
 
     # Input the Korean text
     keyword = input("검색어를 입력해주세요: ")
@@ -323,13 +323,13 @@ def code():
     output_folder = application_path # This should be the path where your index.html is located
 
     # Commit and push changes to GitHub
-    push_changes_to_github("Add new analysis reports and updated index")
+    push_changes_to_github(application_path, git_executable, "Add new analysis reports and updated index")
 
     # Call the function with the appropriate folder name
     update_navigation_page(repo_url, output_folder)
 
     # Commit and push changes to GitHub
-    push_changes_to_github("Add new analysis reports and updated index")
+    push_changes_to_github(application_path, git_executable, "Add new analysis reports and updated index")
 
     pass
 
