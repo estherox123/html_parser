@@ -8,6 +8,15 @@ import re
 import subprocess
 import sys
 
+def check_file_tracked(path, file_name):
+    cmd = [git_executable, "ls-files", file_name]
+    result = subprocess.run(cmd, stdout=subprocess.PIPE, cwd=path)
+    return result.stdout.strip() != b""
+
+# Example usage:
+if not check_file_tracked(application_path, "html_parser4.exe"):
+    print("html_parser4.exe is no longer tracked.")
+
 
 def push_changes_to_github(application_path, git_executable, commit_message="Update content"):
     try:
@@ -26,11 +35,11 @@ def push_changes_to_github(application_path, git_executable, commit_message="Upd
         
         # Stash any unstaged changes
         subprocess.run([git_executable, "stash", "--include-untracked"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
-        print("Stashed any unstaged changes.")
+        ##print("Stashed any unstaged changes.")
 
         # Pull the latest changes from the remote repository with rebase to reduce merge conflicts
         subprocess.run([git_executable, "pull", "--rebase", "origin", "main"], check=True)
-        print("Pulled latest changes from main.")
+        #print("Pulled latest changes from main.")
 
         # Reapply stashed changes if any
         subprocess.run([git_executable, "stash", "pop"], check=False)  # This may raise an error if there are conflicts
@@ -43,12 +52,12 @@ def push_changes_to_github(application_path, git_executable, commit_message="Upd
 
         # Add all changes including new files
         subprocess.run([git_executable, "add", "."], check=True)
-        print("Added all changes.")
+        ##print("Added all changes.")
 
         # Commit the changes
         if status_output.strip():
             subprocess.run([git_executable, "commit", "-m", commit_message], check=True)
-            print(f"Committed changes with message: '{commit_message}'")
+            ##print(f"Committed changes with message: '{commit_message}'")
 
             # Push the changes
             subprocess.run([git_executable, "push", "origin", "main"], check=True)
@@ -196,6 +205,8 @@ def code():
 
     # Use application_path to construct paths relative to the executable's location
     git_executable = os.path.join(application_path, 'PortableGit', 'bin', 'git.exe')
+
+    check_file_tracked(application_path, "html_parser4.exe")
 
     # Define a temporary directory for operations
     tmp_dir = os.path.join(application_path, 'tmp')
