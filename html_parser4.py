@@ -8,41 +8,7 @@ import re
 import subprocess
 import sys
 
-def initial_git_setup(git_executable, application_path):
-    try:
-        # Navigate to the repository directory
-        os.chdir(application_path)
 
-        # Add all changes including new files
-        subprocess.run([git_executable, "add", "."], check=True)
-
-        # Stash any unstaged changes to ensure the directory is clean
-        subprocess.run([git_executable, "stash", "--include-untracked"], check=True)
-        print("Stashed any unstaged changes.")
-
-        # Pull the latest changes from the remote repository to reduce conflicts
-        subprocess.run([git_executable, "pull", "--rebase", "origin", "main"], check=True)
-        print("Pulled latest changes from main.")
-
-        # Reapply stashed changes if any
-        subprocess.run([git_executable, "stash", "pop"], check=False)  # This may raise an error if there are conflicts
-
-        # Commit the changes
-        status_output = subprocess.run([git_executable, "status", "--porcelain"], text=True, stdout=subprocess.PIPE).stdout
-        if status_output.strip():
-            commit_message = "Pre-run commit"
-            subprocess.run([git_executable, "commit", "-m", commit_message], check=True)
-            print(f"Committed changes with message: '{commit_message}'")
-
-            # Push the changes
-            subprocess.run([git_executable, "push", "origin", "main"], check=True)
-            print("Changes pushed to GitHub successfully.")
-        else:
-            print("No changes to commit.")
-
-    except subprocess.CalledProcessError as e:
-        print(f"An error occurred during initial Git setup: {e}")
-        
 def push_changes_to_github(commit_message="Update content"):
     try:
         # Define HOME environment variable for SSH
@@ -247,7 +213,7 @@ def code():
         config_file.write(config_content)
 
     # Initial Git setup: add, commit, and push any pre-existing changes
-    initial_git_setup(git_executable, application_path)
+    push_changes_to_github(commit_message="Initial setup")
 
     # Input the Korean text
     keyword = input("검색어를 입력해주세요: ")
