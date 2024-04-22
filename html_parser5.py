@@ -65,7 +65,7 @@ def push_changes_to_github(application_path, git_executable, commit_message="Upd
 
 
 def get_all_html_folders(repo_url):
-    api_url = f"https://api.github.com/repos/{repo_url}/downloaded_files/contents/"
+    api_url = f"https://api.github.com/repos/{repo_url}/contents/"
     response = requests.get(api_url)
     response.raise_for_status()
     content_list = response.json()
@@ -73,35 +73,38 @@ def get_all_html_folders(repo_url):
     return html_folders
 
 
-def update_navigation_page(repo_url, base_output_folder):
-    # Define paths for PDF and HTML subdirectories
-    pdf_output_path = os.path.join(base_output_folder, 'Downloaded Files', 'pdf')
-    html_output_path = os.path.join(base_output_folder, 'Downloaded Files', 'html')
-    
-    # Fetch all HTML folders inside the HTML output path
-    html_folders = [name for name in os.listdir(html_output_path) if os.path.isdir(os.path.join(html_output_path, name))]
+def update_navigation_page(output_folder, base_folder_name='downloaded_files'):
+    # Define the base path for the downloaded files
+    downloaded_files_path = os.path.join(output_folder, base_folder_name)
+    html_output_path = os.path.join(downloaded_files_path, 'html')
+
+    # Ensure the HTML output path exists
+    if not os.path.exists(html_output_path):
+        print(f"The directory {html_output_path} does not exist.")
+        return
+
+    # Initialize a dictionary to map filenames to their paths
     file_path_dict = {}
 
-    # Iterate over each folder and fetch HTML files within them
-    for folder_name in html_folders:
+    # Iterate over each HTML subfolder and collect HTML file paths
+    for folder_name in os.listdir(html_output_path):
         folder_path = os.path.join(html_output_path, folder_name)
-        for file_name in os.listdir(folder_path):
-            if file_name.endswith('.html'):
-                # The path will be the HTML output folder plus the folder name plus the file name
-                file_path_dict[file_name] = os.path.join('Downloaded Files', 'html', folder_name, file_name)
+        if os.path.isdir(folder_path):
+            for file_name in os.listdir(folder_path):
+                if file_name.endswith('.html'):
+                    file_path_dict[file_name] = os.path.join(base_folder_name, 'html', folder_name, file_name)
 
-    # Now write the index file with the correct paths
-    index_file_path = os.path.join(base_output_folder, 'index.html')
-    with open(index_file_path, 'w', encoding='utf-8') as index_file:
+    # Write the index.html file with the correct paths
+    with open(os.path.join(output_folder, 'index.html'), 'w', encoding='utf-8') as index_file:
         index_file.write("<!DOCTYPE html>\n<html lang='en'>\n<head>\n    <meta charset='UTF-8'>\n")
         index_file.write("    <meta name='viewport' content='width=device-width, initial-scale=1.0'>\n")
         index_file.write("    <title>Analysis Reports</title>\n</head>\n<body>\n    <h1>Analysis Reports</h1>\n")
         index_file.write("    <ul>\n")
-        # Sort the file names for consistent order
         for file_name, file_path in sorted(file_path_dict.items()):
-            # Write the list item with a relative path to the HTML file
             index_file.write(f"        <li><a href='./{file_path}' target='_blank'>{file_name}</a></li>\n")
         index_file.write("    </ul>\n</body>\n</html>")
+    print("Updated navigation page.")
+
 
 
 def save_text_as_markdown(stock_name, title, date, content, output_folder):
