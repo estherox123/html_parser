@@ -8,7 +8,7 @@ import re
 import subprocess
 import sys
 
-def check_file_tracked(path, file_name):
+def check_file_tracked(git_executable, path, file_name):
     cmd = [git_executable, "ls-files", file_name]
     result = subprocess.run(cmd, stdout=subprocess.PIPE, cwd=path)
     return result.stdout.strip() != b""
@@ -202,7 +202,7 @@ def code():
     # Use application_path to construct paths relative to the executable's location
     git_executable = os.path.join(application_path, 'PortableGit', 'bin', 'git.exe')
 
-    check_file_tracked(application_path, "html_parser4.exe")
+    check_file_tracked(git_executable, application_path, "html_parser4.exe")
 
     # Define a temporary directory for operations
     tmp_dir = os.path.join(application_path, 'tmp')
