@@ -65,7 +65,7 @@ def push_changes_to_github(application_path, git_executable, commit_message="Upd
 
 
 def get_all_html_folders(repo_url):
-    api_url = f"https://api.github.com/repos/{repo_url}/contents/"
+    api_url = f"https://api.github.com/repos/{repo_url}/contents/downloaded_files"
     response = requests.get(api_url)
     response.raise_for_status()
     content_list = response.json()
@@ -321,7 +321,7 @@ def code():
     print(f"모든 파일이 {keyword} 폴더에 다운로드 되었습니다.")
 
     
-    repo_url = "estherox123/html_parser/downloaded_files"
+    repo_url = "estherox123/html_parser"
     output_folder = application_path # This should be the path where your index.html is located
 
     # Commit and push changes to GitHub
