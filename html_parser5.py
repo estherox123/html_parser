@@ -65,7 +65,7 @@ def push_changes_to_github(application_path, git_executable, commit_message="Upd
 
 
 def get_all_html_folders(repo_url):
-    api_url = f"https://api.github.com/repos/{repo_url}/contents/downloaded_files/"
+    api_url = f"https://api.github.com/repos/{repo_url}/downloaded_files/contents/"
     response = requests.get(api_url)
     response.raise_for_status()
     content_list = response.json()
