@@ -13,10 +13,6 @@ def check_file_tracked(path, file_name):
     result = subprocess.run(cmd, stdout=subprocess.PIPE, cwd=path)
     return result.stdout.strip() != b""
 
-# Example usage:
-if not check_file_tracked(application_path, "html_parser4.exe"):
-    print("html_parser4.exe is no longer tracked.")
-
 
 def push_changes_to_github(application_path, git_executable, commit_message="Update content"):
     try:
