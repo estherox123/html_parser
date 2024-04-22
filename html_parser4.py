@@ -8,10 +8,10 @@ import re
 import subprocess
 import sys
 
-def append_to_gitignore(application_path, filename):
+def ignore_exe_files(application_path):
     gitignore_path = os.path.join(application_path, '.gitignore')
     with open(gitignore_path, 'a') as file:
-        file.write(f"\n{filename}\n")
+        file.write("\n# Ignore all .exe files\n*.exe\n")
 
 def push_changes_to_github(application_path, git_executable, commit_message="Update content"):
     try:
@@ -122,7 +122,7 @@ stock_name: "{stock_name}"
     with open(file_path, 'w', encoding='utf-8') as md_file:
         md_file.write(markdown_content)
 
-    print(f"Markdown file created: {file_path}")
+    ##print(f"Markdown file created: {file_path}")
 
 
 def create_html_dir(base_folder_path):
@@ -197,6 +197,8 @@ def code():
     else:
         # The application is running as a normal Python script
         application_path = os.path.dirname(os.path.abspath(__file__))
+
+    ignore_exe_files(application_path)
 
     # Use application_path to construct paths relative to the executable's location
     git_executable = os.path.join(application_path, 'PortableGit', 'bin', 'git.exe')
@@ -312,7 +314,7 @@ def code():
                     with open(html_file_path, 'w', encoding='utf-8') as html_file:
                         html_file.write(html_content)
 
-                    print(f"HTML file created: {html_file_path}")
+                    ##print(f"HTML file created: {html_file_path}")
 
                     #Add the HTML file path to the list
                     html_files.append(html_file_path)
