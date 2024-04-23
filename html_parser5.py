@@ -99,7 +99,7 @@ def update_navigation_page(repo_url, output_folder):
         index_file.write("    <ul>\n")
         for file_name, file_path in file_path_dict.items():
             # Write the list item with a relative path to the HTML file
-            index_file.write(f"        <li><a href='./{file_path}'>{file_name}</a></li>\n")
+            index_file.write(f"        <li><a href='./downloaded_files/{file_path}'>{file_name}</a></li>\n")
         index_file.write("    </ul>\n</body>\n</html>")
 
 
