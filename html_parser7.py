@@ -32,10 +32,6 @@ def push_changes_to_github(application_path, git_executable, commit_message="Upd
         subprocess.run([git_executable, "stash", "--include-untracked"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
         ##print("Stashed any unstaged changes.")
 
-        # Pull the latest changes from the remote repository with rebase to reduce merge conflicts
-        subprocess.run([git_executable, "pull", "--rebase", "origin", "master"], check=True)
-        #print("Pulled latest changes from main.")
-
         # Reapply stashed changes if any
         subprocess.run([git_executable, "stash", "pop"], check=False)  # This may raise an error if there are conflicts
         
