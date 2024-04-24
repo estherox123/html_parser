@@ -193,7 +193,6 @@ def code(keyword):
         # The application is running as a normal Python script
         application_path = os.path.dirname(os.path.abspath(__file__))
 
-    ignore_exe_files(application_path)
 
     # Use application_path to construct paths relative to the executable's location
     git_executable = os.path.join(application_path, 'PortableGit', 'bin', 'git.exe')
@@ -314,6 +313,8 @@ def code(keyword):
 
     
     repo_url = "estherox123/html_parser"
+    ignore_exe_files(application_path)
+
     output_folder = application_path # This should be the path where your index.html is located
 
     # Commit and push changes to GitHub
