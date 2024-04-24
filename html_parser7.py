@@ -7,8 +7,6 @@ import PyPDF2
 import re
 import subprocess
 import sys
-import PySimpleGUI as sg
-import threading
 
 def ignore_exe_files(application_path):
     gitignore_path = os.path.join(application_path, '.gitignore')
@@ -34,6 +32,13 @@ def push_changes_to_github(application_path, git_executable, commit_message="Upd
         subprocess.run([git_executable, "stash", "--include-untracked"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
         ##print("Stashed any unstaged changes.")
 
+        # Pull the latest changes from the remote repository with rebase to reduce merge conflicts
+        subprocess.run([git_executable, "pull", "--rebase", "origin", "master"], check=True)
+        #print("Pulled latest changes from main.")
+
+        # Reapply stashed changes if any
+        subprocess.run([git_executable, "stash", "pop"], check=False)  # This may raise an error if there are conflicts
+        
         # Check for conflicts after unstashing
         status_output = subprocess.run([git_executable, "status", "--porcelain"], text=True, stdout=subprocess.PIPE).stdout
         if "UU" in status_output:
@@ -50,7 +55,7 @@ def push_changes_to_github(application_path, git_executable, commit_message="Upd
             ##print(f"Committed changes with message: '{commit_message}'")
 
             # Push the changes
-            subprocess.run([git_executable, "push"], check=True)
+            subprocess.run([git_executable, "push", "origin", "master"], check=True)
             print("Changes pushed to GitHub successfully.")
         else:
             print("No changes to commit.")
@@ -184,8 +189,8 @@ def find_html_files(directory):
     html_files = [f for f in os.listdir(directory) if f.endswith('.html')]
     return html_files
 
-def code(keyword):
-    # Determine if the application is a frozen executable (i.e., compiled with PyInstaller)
+def code():
+        # Determine if the application is a frozen executable (i.e., compiled with PyInstaller)
     if getattr(sys, 'frozen', False):
         # The application is running as a standalone executable
         application_path = os.path.dirname(sys.executable)
@@ -193,6 +198,8 @@ def code(keyword):
         # The application is running as a normal Python script
         application_path = os.path.dirname(os.path.abspath(__file__))
 
+    # Do not update .exe files in git
+    ignore_exe_files(application_path)
 
     # Use application_path to construct paths relative to the executable's location
     git_executable = os.path.join(application_path, 'PortableGit', 'bin', 'git.exe')
@@ -214,6 +221,9 @@ def code(keyword):
 
     # Initial Git setup: add, commit, and push any pre-existing changes
     push_changes_to_github(application_path, git_executable, commit_message="Initial setup")
+
+    # Input the Korean text
+    keyword = input("검색어를 입력해주세요: ")
 
     # Get the URL
     url = create_search_url(keyword)
@@ -277,10 +287,14 @@ def code(keyword):
                     
                     
                     # Create a directory for HTML files
-                    html_folder_base_path = create_html_dir(os.path.join(downloaded_files_path, f"{keyword}_HTML"))
+                    html_folder_base_path = os.path.join(downloaded_files_path, f"{keyword}_HTML")
+
+                    # Ensure the HTML directory exists
+                    if not os.path.exists(html_folder_base_path):
+                        os.makedirs(html_folder_base_path)
 
                     # Construct the HTML file path
-                    html_file_path = os.path.join(html_folder_base_path, f"{stock_name} - {title} - {date}.html")
+                    html_file_path = os.path.join(html_folder_base_path, f"{file_name} - {date}.html")
                     
                     # Simple HTML structure for your content
                     html_content = f"""<html>
@@ -313,8 +327,6 @@ def code(keyword):
 
     
     repo_url = "estherox123/html_parser"
-    ignore_exe_files(application_path)
-
     output_folder = application_path # This should be the path where your index.html is located
 
     # Commit and push changes to GitHub
@@ -326,35 +338,7 @@ def code(keyword):
     # Commit and push changes to GitHub
     push_changes_to_github(application_path, git_executable, "Add new analysis reports and updated index")
 
+    pass
 
-
-# Define the layout of the window
-layout = [
-    [sg.Text("Enter the keyword:")],
-    [sg.Input(key='-KEYWORD-')],
-    [sg.Button('Submit'), sg.Exit()],
-    [sg.Text('', key='-STATUS-')],
-]
-
-# Create the window
-window = sg.Window('Keyword Input', layout)
-
-while True:  # Event Loop
-    event, values = window.read()
-
-    if event == sg.WIN_CLOSED or event == 'Exit':
-        break
-    elif event == 'Submit':
-        keyword = values['-KEYWORD-']  # Get the entered keyword
-        window['-STATUS-'].update(value='Processing... Please wait.')
-        code(keyword)
-
-        # After processing is done, you can update the status
-        window['-STATUS-'].update(value='Done processing.')
-
-        # Reset the input field for new input
-        window['-KEYWORD-'].update(value='')
-
-# Close the window when done
-window.close()
-
+if __name__ == "__main__":
+    code()
