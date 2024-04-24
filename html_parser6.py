@@ -278,11 +278,7 @@ def code(keyword):
                     
                     
                     # Create a directory for HTML files
-                    html_folder_base_path = os.path.join(downloaded_files_path, f"{keyword}_HTML")
-
-                    # Ensure the HTML directory exists
-                    if not os.path.exists(html_folder_base_path):
-                        os.makedirs(html_folder_base_path)
+                    html_folder_base_path = create_html_dir(os.path.join(downloaded_files_path, f"{keyword}_HTML"))
 
                     # Construct the HTML file path
                     html_file_path = os.path.join(html_folder_base_path, f"{stock_name} - {title} - {date}.html")
