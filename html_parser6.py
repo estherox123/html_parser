@@ -285,7 +285,7 @@ def code(keyword):
                         os.makedirs(html_folder_base_path)
 
                     # Construct the HTML file path
-                    html_file_path = os.path.join(html_folder_base_path, f"{file_name} - {date}.html")
+                    html_file_path = os.path.join(html_folder_base_path, f"{stock_name} - {title} - {date}.html")
                     
                     # Simple HTML structure for your content
                     html_content = f"""<html>
