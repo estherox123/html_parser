@@ -7,96 +7,8 @@ import PyPDF2
 import re
 import subprocess
 import sys
-
-def ignore_exe_files(application_path):
-    gitignore_path = os.path.join(application_path, '.gitignore')
-    with open(gitignore_path, 'a') as file:
-        file.write("\n# Ignore all .exe files\n*.exe\n")
-
-def push_changes_to_github(application_path, git_executable, commit_message="Update content"):
-    try:
-        # Define HOME environment variable for SSH
-        os.environ['HOME'] = os.path.expanduser('~')
-        
-        # Set the GIT_SSH_COMMAND to use the custom deploy key and PortableGit ssh
-        ssh_executable = os.path.join(application_path, 'PortableGit', 'usr', 'bin', 'ssh.exe')
-        ssh_key_path = os.path.join(application_path, 'new_deploy_key')
-        os.environ['GIT_SSH_COMMAND'] = f'"{ssh_executable}" -i "{ssh_key_path}" -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
-        
-                
-        # Set repository path
-        repository_path = os.path.join(application_path)
-        os.chdir(repository_path)
-        
-        # Stash any unstaged changes
-        subprocess.run([git_executable, "stash", "--include-untracked"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
-        ##print("Stashed any unstaged changes.")
-
-        # Reapply stashed changes if any
-        subprocess.run([git_executable, "stash", "pop"], check=False)  # This may raise an error if there are conflicts
-        
-        # Check for conflicts after unstashing
-        status_output = subprocess.run([git_executable, "status", "--porcelain"], text=True, stdout=subprocess.PIPE).stdout
-        if "UU" in status_output:
-            print("There are merge conflicts after unstashing. Please resolve them before proceeding.")
-            return  # Exit the function, as manual intervention is required
-
-        # Add all changes including new files
-        subprocess.run([git_executable, "add", "."], check=True)
-        ##print("Added all changes.")
-
-        # Commit the changes
-        if status_output.strip():
-            subprocess.run([git_executable, "commit", "-m", commit_message], check=True)
-            ##print(f"Committed changes with message: '{commit_message}'")
-
-            # Push the changes
-            subprocess.run([git_executable, "push", "origin", "master"], check=True)
-            print("Changes pushed to GitHub successfully.")
-        else:
-            print("No changes to commit.")
-
-    except subprocess.CalledProcessError as e:
-        print(f"An error occurred: {e}")
-
-
-def get_all_html_folders(repo_url):
-    api_url = f"https://api.github.com/repos/{repo_url}/contents/downloaded_files"
-    response = requests.get(api_url)
-    response.raise_for_status()
-    content_list = response.json()
-    html_folders = [content['name'] for content in content_list if content['type'] == 'dir' and content['name'].endswith('_HTML')]
-    return html_folders
-
-
-def update_navigation_page(repo_url, output_folder):
-    # Fetch all HTML folders
-    html_folders = get_all_html_folders(repo_url)
-    # Initialize a dictionary to map filenames to their paths
-    file_path_dict = {}
-
-    # Iterate over each folder and fetch HTML files within them
-    for folder_name in html_folders:
-        folder_contents_url = f"https://api.github.com/repos/{repo_url}/contents/downloaded_files/{folder_name}"
-        response = requests.get(folder_contents_url)
-        response.raise_for_status()
-        folder_contents = response.json()
-        # For each HTML file, add its path to the dictionary
-        for content in folder_contents:
-            if content['name'].endswith('.html'):
-                # The path will be the folder name plus the file name
-                file_path_dict[content['name']] = f"{folder_name}/{content['name']}"
-
-    # Now write the index file with the correct paths
-    with open(os.path.join(output_folder, 'index.html'), 'w', encoding='utf-8') as index_file:
-        index_file.write("<!DOCTYPE html>\n<html lang='en'>\n<head>\n    <meta charset='UTF-8'>\n")
-        index_file.write("    <meta name='viewport' content='width=device-width, initial-scale=1.0'>\n")
-        index_file.write("    <title>Analysis Reports</title>\n</head>\n<body>\n    <h1>Analysis Reports</h1>\n")
-        index_file.write("    <ul>\n")
-        for file_name, file_path in file_path_dict.items():
-            # Write the list item with a relative path to the HTML file
-            index_file.write(f"        <li><a href='./downloaded_files/{file_path}'>{file_name}</a></li>\n")
-        index_file.write("    </ul>\n</body>\n</html>")
+import PySimpleGUI as sg
+import threading
 
 
 def save_text_as_markdown(stock_name, title, date, content, output_folder):
@@ -122,7 +34,7 @@ stock_name: "{stock_name}"
 
 
 def create_html_dir(base_folder_path):
-    html_folder_path = f"{base_folder_path}_html"
+    html_folder_path = f"{base_folder_path}"
 
     if not os.path.exists(html_folder_path):
         os.makedirs(html_folder_path)
@@ -185,8 +97,9 @@ def find_html_files(directory):
     html_files = [f for f in os.listdir(directory) if f.endswith('.html')]
     return html_files
 
-def code():
-        # Determine if the application is a frozen executable (i.e., compiled with PyInstaller)
+
+def code(keyword):
+    # Determine if the application is a frozen executable (i.e., compiled with PyInstaller)
     if getattr(sys, 'frozen', False):
         # The application is running as a standalone executable
         application_path = os.path.dirname(sys.executable)
@@ -194,32 +107,6 @@ def code():
         # The application is running as a normal Python script
         application_path = os.path.dirname(os.path.abspath(__file__))
 
-    # Do not update .exe files in git
-    ignore_exe_files(application_path)
-
-    # Use application_path to construct paths relative to the executable's location
-    git_executable = os.path.join(application_path, 'PortableGit', 'bin', 'git.exe')
-
-    # Define a temporary directory for operations
-    tmp_dir = os.path.join(application_path, 'tmp')
-    os.makedirs(tmp_dir, exist_ok=True)
-    os.environ['TMP'] = tmp_dir
-    
-    # Set up the SSH configuration for Git
-    config_content = f"""Host github.com
-    User git
-    IdentityFile {application_path}\\new_deploy_key
-    IdentitiesOnly yes
-    """
-    # Write the content to config.txt
-    with open('config.txt', 'w') as config_file:
-        config_file.write(config_content)
-
-    # Initial Git setup: add, commit, and push any pre-existing changes
-    push_changes_to_github(application_path, git_executable, commit_message="Initial setup")
-
-    # Input the Korean text
-    keyword = input("검색어를 입력해주세요: ")
 
     # Get the URL
     url = create_search_url(keyword)
@@ -283,14 +170,10 @@ def code():
                     
                     
                     # Create a directory for HTML files
-                    html_folder_base_path = os.path.join(downloaded_files_path, f"{keyword}_HTML")
-
-                    # Ensure the HTML directory exists
-                    if not os.path.exists(html_folder_base_path):
-                        os.makedirs(html_folder_base_path)
+                    html_folder_base_path = create_html_dir(os.path.join(downloaded_files_path, f"{keyword}_HTML"))
 
                     # Construct the HTML file path
-                    html_file_path = os.path.join(html_folder_base_path, f"{file_name} - {date}.html")
+                    html_file_path = os.path.join(html_folder_base_path, f"{stock_name} - {title} - {date}.html")
                     
                     # Simple HTML structure for your content
                     html_content = f"""<html>
@@ -322,19 +205,39 @@ def code():
     print(f"모든 파일이 {keyword} 폴더에 다운로드 되었습니다.")
 
     
-    repo_url = "estherox123/html_parser"
-    output_folder = application_path # This should be the path where your index.html is located
 
-    # Commit and push changes to GitHub
-    push_changes_to_github(application_path, git_executable, "Add new analysis reports and updated index")
 
-    # Call the function with the appropriate folder name
-    update_navigation_page(repo_url, output_folder)
 
-    # Commit and push changes to GitHub
-    push_changes_to_github(application_path, git_executable, "Add new analysis reports and updated index")
+# Define the layout of the window
+layout = [
+    [sg.Text("검색어를 입력해주세요:")],
+    [sg.Input(key='-KEYWORD-')],
+    [sg.Button('검색'), sg.Exit()],
+    [sg.Text('', key='-STATUS-')],
+]
 
-    pass
+# Create the window
+window = sg.Window('분석 리포트 다운로드', layout, return_keyboard_events=True)
 
-if __name__ == "__main__":
-    code()
+while True:  # Event Loop
+    event, values = window.read()
+
+    if event == sg.WIN_CLOSED or event == 'Exit':
+        break
+    elif event in ('검색', '\r', '\n'):
+        keyword = values['-KEYWORD-']  # Get the entered keyword
+        window['-STATUS-'].update(value='다운로드 중입니다...')
+        window.refresh()
+        code(keyword)
+
+        # After processing is done, you can update the status
+        window['-STATUS-'].update(value='완료되었습니다.')
+
+        sg.popup('다운로드가 완료되었습니다.', title="다운로드 완료")  # "Download is complete."
+
+        # Reset the input field for new input
+        window['-KEYWORD-'].update(value='')
+
+# Close the window when done
+window.close()
+
